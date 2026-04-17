@@ -1,0 +1,37 @@
+# Credenciales API Banco Central
+user.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Entorno virtual
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Datos exportados (opcional, descomenta si no quieres versionar CSVs grandes)
+# data/*.csv
+
+# Archivos temporales del proyecto
+scratch_*.py
+implementation_plan.md

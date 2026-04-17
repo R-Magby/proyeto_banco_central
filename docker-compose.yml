@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    volumes:
+      - .:/app
+    # Mapeamos user.txt explícitamente si queremos asegurar que esté disponible
+    # aunque .:/app ya lo incluye.
+    # - ./user.txt:/app/user.txt
+    environment:
+      - PYTHONUNBUFFERED=1
