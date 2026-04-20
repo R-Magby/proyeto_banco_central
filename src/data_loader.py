@@ -109,8 +109,9 @@ def datos_regionales(df_servicios_per_region, file_credenciales="user.txt"):
 
     dfs_serv_reg = []
     url = "https://si3.bcentral.cl/SieteRestWS/SieteRestWS.ashx"
+    df_temp = df_servicios_per_region.reset_index()
 
-    for idx, serie in enumerate(df_servicios_per_region.seriesId.values):
+    for idx, serie in enumerate(df_temp.seriesId.values):
         params = {
             "user": user,
             "pass": password,
@@ -123,8 +124,8 @@ def datos_regionales(df_servicios_per_region, file_credenciales="user.txt"):
 
         try:
             df = pd.DataFrame(response["Series"]["Obs"])
-            df["Titulo"] = df_servicios_per_region["Titulo"][idx]
-            df['Región'] = df_servicios_per_region["Región"][idx]
+            df["Titulo"] = df_temp["Titulo"][idx]
+            df['Región'] = df_temp["Región"][idx]
             dfs_serv_reg.append(df)
         except:
             print(f"Error en serie {serie}")

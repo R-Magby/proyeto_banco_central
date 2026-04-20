@@ -25,3 +25,22 @@ El objetivo es transformar un código "versión 1" en un proyecto profesional, m
 - **`src/`**: Centraliza la lógica de negocio en módulos reutilizables.
 - **`main.py`**: Actúa como el centro de control que coordina el flujo de trabajo (limpieza -> transformación -> análisis).
 - **`requirements.txt`**: Vital para que otros puedan replicar tu entorno de trabajo.
+
+---
+
+## [v2.0.0] - 2026-04-20
+### Actualización a Soporte Trimestral y CAGR
+**Objetivo:** Integrar datos trimestrales y mejorar la precisión de los cálculos de crecimiento acumulado basándose en la nueva lógica de la versión 2 del notebook.
+
+**Cambios realizados:**
+- **Módulos `src` actualizados**: Se incorporó la lógica del PIB regional trimestral (`df_quartely`) y contribuciones porcentuales (`df_porc`).
+- **Nuevas Funciones**:
+    - `datos_regionales_quartely`: Descarga específica para series trimestrales con filtrado por tipo de PIB.
+    - `ajuste_df_serie_quartely`: Procesamiento avanzado de títulos regionales trimestrales usando `OrdinalEncoder`.
+    - `normalize_quarter_dates`: Estandarización de fechas para alineación entre PIB y Electricidad.
+- **Refinamiento Estadístico**: Se actualizó `Analisis_PIB` para usar CAGR y se añadió soporte para correlación Pearson/Spearman dinámica.
+- **Orquestación**: `main.py` ahora maneja los tres datasets principales (`df_anual`, `df_quartely`, `df_porc`).
+- **Documentación**: Se actualizó exhaustivamente `Resumen/ReadMe.md` con los hallazgos de la v2.
+
+**Justificación:**
+La transición a un análisis trimestral permite capturar la volatilidad económica intra-anual, ofreciendo una visión más fiel de la recuperación post-pandemia.

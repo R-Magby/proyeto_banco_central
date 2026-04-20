@@ -59,6 +59,10 @@ def main():
     df_series_electricidad = buscar_series(siete, LISTA_ELECTRICIDAD[0])
     df_electricidad = datos_regionales(ajuste_df_serie(df_series_electricidad), file_credenciales="user.txt")
 
+    # Carga de datos PIB Trimestrales
+    print("      ✓ Descargando PIB Trimestral (resolviendo series)...")
+    x_q = buscar_series(siete, "referencia 2018")
+    df_pib_q_meta = ajuste_df_serie_quartely(x_q)
     df_quartely = datos_regionales_quartely(df_pib_q_meta, 1.0, file_credenciales="user.txt")
 
     # Carga de datos PIB Contribución Porcentual

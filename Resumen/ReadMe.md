@@ -1,10 +1,9 @@
-## Resumen:
-En este análisis se utilizaron datos del Banco Central de Chile usando la API 'bcchapi'. Se usaron datos del PIB anual de las 16 regiones y el recaudado por 
-sus diferentes servicios (Pesca, Mineria, Construccion, etc..) con una coleccion que abarca desde el 2013 al 2024, se obtuvo información relevante de ellos,
-usando programacion en python (pandas) y estadistica, se pudo identificar:
-- Una prediccion de los posible servicios dominantes en el futuro.
-- Analisis COVID
-- Generacion de electricidad por region y su correlacion con el PIB.
+En este análisis se utilizaron datos del Banco Central de Chile usando la API 'bcchapi'. Se profundizaron los hallazgos de la versión inicial mediante la incorporación de datos del PIB trimestral y contribuciones porcentuales por región, abarcando desde 2013 hasta el primer semestre de 2024.
+Usando programación en Python (pandas, scikit-learn, scipy) y estadística, se pudo identificar:
+- Evolución dinámica del PIB Trimestral (Referencia 2018).
+- Análisis refinado del periodo COVID-19 mediante CAGR normalizado.
+- Correlación dinámica (Pearson/Spearman) entre generación eléctrica y PIB trimestral.
+- Predicción de dominancia sectorial futura.
 
 Este proyecto continua con un informe en power BI, donde se visualiza este informacion, conteniendo las siguientes secciones (por ahora):
 - PIB por regiones
@@ -50,17 +49,25 @@ Los servicios que entregaron la mayor cantidad de PIB historicamente (y que tamb
 |Minería|261.564,25 MM$|
 
 Seguidos por la industria manufacturera y el comercio.
-
 ### Crecimiento de Regiones
 pregunta: ¿Que regiones han crecido más en el periodo 2013-2024?
 
-Si bien las principales regiones que contribuyen al PIB son la región Metropolitana de Santiago, Antofagasta y Valparaíso, lo realmente interesante aqui es saber que region crecio mas en este periodo, para esta seccion se calculo el crecimiento acumulado.
+Si bien las principales regiones que contribuyen al PIB son la región Metropolitana de Santiago, Antofagasta y Valparaíso en terminos de precio corriente (dinero real considerando inflacion), lo realmente interesante aqui es saber que region crecio mas en este periodo considerando el PIB por volumen (sin inflacion), para esta seccion se calculo el crecimiento acumulado.
 
 |Región|Porcentaje|
 |:---|:---|
-|Tarapacá|187.96%|
-|Antofagasta|167.13%|
-|O'Higgins|157.74%|
+|Arica y Parinacota|3.198 %|
+|los Lagos|3.166%|
+|Biobío|2.685%|
+
+- **Volatilidad:** Todas las regiones tienen una volatilidad mayor a uno, lo que indica un crecimiento economico impredecible. Posiblemente debido al COVID entre la decada.
+- **Refinamiento CAGR:** Vemos que la region con mayor crecimiento CAGR en el periodod 2013 - 2024 son las regiones de los Lagos, Arica y Parinacota y Biobío. Esto no indica las mayores economias, si no que son las que más rapido estan creciendo en la ultima decada.
+
+
+### Análisis Trimestral y Coyuntura
+Con la incorporación de datos trimestrales de volumen encadenado (referencia 2018), se logró observar la dinámica económica con mayor resolución. Esto permite identificar quiebres estructurales intra-anuales que los datos agregados suelen ocultar.
+- **Estacionalidad:** Se observa un comportamiento cíclico marcado en regiones agrícolas y turísticas.
+- **Volumen vs. Contribución:** El análisis ahora separa el crecimiento real (volumen) del impacto relativo de cada sector al PIB nacional.
 
 
 ### Estudio de Tendencias
@@ -73,6 +80,7 @@ Se utilizaron tres criterios en cada servicio para esta prediccion, el ratio de 
 serivios personales y administracion publica, esto posiblemente debido al alza de la venta de los salmones.
 - La region del Maule tiene como PIB principa historicamente a la industria manufacturera, pero puede ser remplazada por Vivienda.
 - Los Rios a diferencia de Los Lagos, su industria manufacturera en un plazo de 2 a 3 años puede ser remplazado por servicios personales.
+
 
 ### Analisis COVID.
 preguntas: ¿En que afecto la pandemia a los servicios de las regiones? y ¿El PIB post-pandemia recupero lo proyectado del PIB pre-pandemia?
@@ -90,10 +98,15 @@ Se espera que a futuro se pueda responder la segunda pregunta.
 Preguntas: ¿El aumento de generacion de electrcidad implica aumento en el PIB o viceversa? y ¿Este aumento puede atribuirse al crecimiento del año anterior?
 
 Del mismo banco central es posible descargar datos mensuales de la generacion y distribucion de electrcidad (Mwh) de algunas regiones, para poder relacionarlo con el PIB se calculo el promedio de cada año. 
-Lo interesante se encuentra en el norte (Antofagasta y Atacama ) donde un el PIB tiene un mayor impacto cuando crece la generacion de electricidad del año anterior en la region, esto posiblemente debido al rubro minero. Mientras que algunas regiones (Los lagos, Ñuble y Arica y parinacota) con principal rubro los Servicios personales (Actividades deportivas, artisticas, de entretencion, peluquerias,etc...) arrastran la demanda energetica.Los demas presentan datos no significativos, lo que puede deberse a ajustes anuales y no presentan una tendencia alcista o bajista.
+Se aplicaron pruebas de normalidad de **Shapiro-Wilk** para determinar el método de correlación óptimo por región:
+- **Correlación de Pearson:** Para series con distribución normal.
+- **Correlación de Spearman:** Para series no paramétricas.
+
+Lo interesante se encuentran (Araucania, Ñuble, Coquimbo y Atacama ) donde un el PIB tiene un mayor impacto cuando crece la generacion de electricidad del año anterior en la region, esto posiblemente debido al rubro minero. Mientras que algunas regiones (Los lagos y Arica y parinacota) con principal rubro los Servicios personales (Actividades deportivas, artisticas, de entretencion, peluquerias,etc...) arrastran la demanda energetica. Los demas presentan datos no significativos para rechazar la hipotesis nula, lo que puede deberse a ajustes anuales y no presentan una tendencia alcista o bajista.
 
 El dato interesante es Valparaíso, genera electricidad que no se traduce en crecimiento económico local, posiblemente, el cierre progresivo de las plantas a carbon. Su economía crece por servicios, comercio y turismo, no por industria electrointensiva.
 Para mayor detalle acerca de la [Tabla.2](Tablas/Elec_x_PIB.md)
+
 
 ### Series de Tiempo
 
