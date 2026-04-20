@@ -8,3 +8,5 @@ bcchapi
 requests
 scipy
 statsmodels
+geopandas
+plotly

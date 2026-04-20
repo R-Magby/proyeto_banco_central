@@ -11,7 +11,8 @@ Contiene:
 
 import numpy as np
 import pandas as pd
-from scipy.stats import linregress
+from scipy.stats import linregress, shapiro, spearmanr, pearsonr
+from statsmodels.tsa.stattools import adfuller, kpss, grangercausalitytests
 
 
 # ─────────────────────────────────────────────
@@ -92,21 +93,17 @@ def Analisis_PIB(df, region, postpre=None, fecha=None):
     else:
         return print("Se tiene que ingresar 'post' o 'pre'. ")
 
-    n = df_descriptivo_pp["Date"].unique().shape[0]
-
     # Analisis
     df_descri = []
 
-    df_descri.append(df_descriptivo_pp.groupby("Titulo")["value"].apply(lambda x: (x.iloc[-1] / (x.iloc[0] + 1e-6) - 1) * 100).rename('Crecimiento acumulado'))
+    n = df_descriptivo_pp["Date"].max().year - df_descriptivo_pp["Date"].min().year
+
+    df_descri.append(df_descriptivo_pp.groupby("Titulo")["value"].apply(lambda x: ((x.iloc[-1] / (x.iloc[0] + 1e-6))**(1/n) - 1) * 100).rename('Crecimiento acumulado'))
     df_descri.append(df_descriptivo_pp.groupby("Titulo")["value"].apply(tendencia).rename('Tendencia (Var)'))
     df_descri.append(df_descriptivo_pp.dropna().groupby("Titulo")["variación interanual"].mean().rename('Media'))
     df_descri.append(df_descriptivo_pp.dropna().groupby("Titulo")["variación interanual"].std().rename('Std'))
     df_descri = pd.concat(df_descri, axis=1)
-    df_descri["Volatilidad"] = pd.cut(
-        df_descri["Std"] / (df_descri["Media"].abs() + 1e-6),
-        bins=[0, 0.3, 0.7, 1.5, 3, 100],
-        labels=["Baja", "Normal", "Alta", "Muy alta", "Extremo"]
-    )
+    df_descri["Volatilidad"] = df_descri["Std"] / (df_descri["Media"].abs() + 1e-6)
     return df_descri, df_descriptivo, n
 
 
@@ -261,7 +258,7 @@ def COVID_comparacion(df_pre, df_post, n_pre, n_post):
 # Correlación PIB-Electricidad
 # ─────────────────────────────────────────────
 
-def correlacion_con_lag(serie_x, serie_y, lag=1):
+def correlacion_con_lag(serie_x, serie_y, lag=1, method='pearson'):
     """
     Correlaciona serie_x rezagada con serie_y.
     lag=1: ¿el valor del año anterior de X se relaciona con Y hoy?
@@ -274,16 +271,29 @@ def correlacion_con_lag(serie_x, serie_y, lag=1):
         Serie dependiente (ej: PIB).
     lag : int
         Número de períodos de rezago.
+    method : str
+        'pearson' o 'spearman'
 
     Retorna
     -------
     tuple
         (correlación, p-value)
     """
-    from scipy.stats import pearsonr
     x_lag = serie_x.shift(lag).dropna()
-    y_alineado = serie_y.loc[x_lag.index]
-    corr, pvalue = pearsonr(x_lag, y_alineado)
+    common_index = x_lag.index.intersection(serie_y.index)
+    
+    if len(common_index) == 0:
+        return float('nan'), float('nan')
+        
+    x_lag_aligned = x_lag.loc[common_index]
+    y_alineado = serie_y.loc[common_index]
+    
+    if method == 'pearson':
+        corr, pvalue = pearsonr(x_lag_aligned, y_alineado)
+    elif method == 'spearman':
+        corr, pvalue = spearmanr(x_lag_aligned, y_alineado)
+    else:
+        raise ValueError("Method must be 'pearson' or 'spearman'")
     return corr, pvalue
 
 
@@ -299,6 +309,71 @@ def comparativa_tendencia(df_1, df_2):
     pendiente_2 = tendencia(y_norm)
     diff = pendiente_1 - pendiente_2
     return diff
+
+
+# ─────────────────────────────────────────────
+# Pruebas estadísticas avanzadas
+# ─────────────────────────────────────────────
+
+def test_estacionariedad(serie, signficancia=0.05):
+    """
+    Realiza pruebas ADF y KPSS para determinar la estacionariedad de una serie.
+
+    ADF: H0 = Serie tiene raíz unitaria (No estacionaria).
+    KPSS: H0 = Serie es estacionaria.
+
+    Retorna
+    -------
+    dict
+        Resultados de ambas pruebas y recomendación.
+    """
+    # ADF
+    adf_res = adfuller(serie.dropna(), autolag='AIC')
+    adf_pval = adf_res[1]
+    adf_stat = adf_res[0]
+
+    # KPSS
+    kpss_res = kpss(serie.dropna(), regression='c', nlags="auto")
+    kpss_pval = kpss_res[1]
+    kpss_stat = kpss_res[0]
+
+    # Diagnóstico simplificado
+    estacionaria = False
+    if adf_pval < signficancia and kpss_pval > signficancia:
+        diagnostico = "Estacionaria (ADF y KPSS coinciden)"
+        estacionaria = True
+    elif adf_pval > signficancia and kpss_pval < signficancia:
+        diagnostico = "No Estacionaria (ADF y KPSS coinciden)"
+    elif adf_pval < signficancia and kpss_pval < signficancia:
+        diagnostico = "Estacionaria en Diferencia (Trend Stationary)"
+    else:
+        diagnostico = "Inconcluso (Necesita mayor revisión)"
+
+    return {
+        'adf_pvalue': adf_pval,
+        'kpss_pvalue': kpss_pval,
+        'diagnostico': diagnostico,
+        'estacionaria': estacionaria
+    }
+
+
+def analisis_causalidad_granger(serie_x, serie_y, max_lags=4):
+    """
+    Realiza la prueba de causalidad de Granger para ver si X ayuda a predecir Y.
+
+    Retorna
+    -------
+    dict
+        P-values mínimos encontrados para diferentes rezagos.
+    """
+    df = pd.concat([serie_y, serie_x], axis=1).dropna()
+    res = grangercausalitytests(df, max_lags, verbose=False)
+    p_values = [round(res[i + 1][0]['ssr_chi2test'][1], 4) for i in range(max_lags)]
+    return {
+        'min_p_value': min(p_values),
+        'p_values_per_lag': p_values,
+        'causalidad': min(p_values) < 0.05
+    }
 
 
 # ─────────────────────────────────────────────
@@ -395,6 +470,94 @@ class modelo_ARIMA:
     def export_data(self):
         return self.train, self.test
 
+
+# ─────────────────────────────────────────────
+# Análisis Multivariado Trimestral
+# ─────────────────────────────────────────────
+
+def test_normalidad_shapiro(df, column="value", alfa=0.05):
+    """
+    Evalua normalidad mediante test de Shapiro-Wilk sobre un DataFrame agrupado por region.
+    
+    Retorna
+    -------
+    list, list
+        (regiones_normales, regiones_no_normales)
+    """
+    regiones_distrib_norm = []
+    regiones_no_distrib_norm = []
+    for reg in df["Región"].unique():
+        data = df[df["Región"] == reg][column].dropna().values
+        if len(data) >= 3:
+            stat, pvalue = shapiro(data)
+            if pvalue > alfa:
+                regiones_distrib_norm.append(reg)
+            else:
+                regiones_no_distrib_norm.append(reg)
+    return regiones_distrib_norm, regiones_no_distrib_norm
+
+
+def analisis_correlacion_pib_electricidad_trimestral(df_pib_quartely, df_elec_monthly, normalize_dates_func):
+    """
+    Calcula correlación entre la electricidad y PIB por region usando métodos dinámicos 
+    (Pearson/Spearman) basándose en pruebas de normalidad.
+    """
+    df_pib = df_pib_quartely[df_pib_quartely["Titulo"] == "PIB"].copy()
+    
+    # Homogenizar nombres problematicos conocidos para cruzar
+    df_pib = df_pib[~df_pib["Región"].isin(['Aysén del general carlos ibáñez del campo', 'Magallanes y la antártica chilena', 'Metropolitana santiago'])]
+    df_elec = df_elec_monthly.copy()
+    df_elec["Región"] = df_elec["Región"].str.replace("Del libertador general bernardo o'higgins", 'Del libertador general bernardo ohiggins', regex=False)
+    df_pib["Región"] = df_pib["Región"].str.replace("Del ñuble", 'Ñuble', regex=False)
+    
+    # Test de normalidad del PIB
+    regiones_norm, regiones_no_norm = test_normalidad_shapiro(df_pib)
+    
+    # Agrupación trimestral de electricidad (Suma de los meses que lo componen)
+    df_elec['Date'] = pd.to_datetime(df_elec['Date'])
+    df_elec = df_elec.set_index('Date')
+    df_elec_quart = df_elec.groupby('Región')["value"].resample('QS-JAN').sum().reset_index()
+    
+    df_corre = pd.DataFrame()
+    for reg in df_pib["Región"].unique():
+        temp_pib = df_pib[df_pib.Región == reg].copy()
+        temp_elec = df_elec_quart[df_elec_quart.Región == reg].copy()
+        
+        # Alinear dias 1 para los trimestres (normalizacion)
+        temp_pib['Date'] = normalize_dates_func(temp_pib['Date'])
+        
+        # Filtros min date
+        min_year = 2017 if reg == "Ñuble" else 2013
+        temp_pib = temp_pib[temp_pib["Date"].dt.year >= min_year]
+        temp_elec = temp_elec[temp_elec["Date"].dt.year >= min_year]
+        
+        try:
+            common_start = max(temp_pib['Date'].min(), temp_elec['Date'].min())
+            common_end = min(temp_pib['Date'].max(), temp_elec['Date'].max())
+            
+            temp_pib = temp_pib[(temp_pib['Date'] >= common_start) & (temp_pib['Date'] <= common_end)]
+            temp_elec = temp_elec[(temp_elec['Date'] >= common_start) & (temp_elec['Date'] <= common_end)]
+            
+            serie_pib = temp_pib.set_index('Date')['value']
+            serie_elec = temp_elec.set_index('Date')['value']
+            
+            method = 'spearman' if reg in regiones_no_norm else 'pearson'
+            
+            corr_contem, pvalue_contem = correlacion_con_lag(serie_pib, serie_elec, lag=0, method=method)
+            corr_lag, pvalue_lag = correlacion_con_lag(serie_elec, serie_pib, lag=1, method=method)
+            corr_lag_pe, pvalue_lag_pe = correlacion_con_lag(serie_pib, serie_elec, lag=1, method=method)
+            
+            row = pd.DataFrame({
+                "Contemporaneo": [corr_contem], "p_1>0.05": [pvalue_contem > 0.05],
+                "Lag: Elec -> PIB": [corr_lag], "p_2>0.05": [pvalue_lag > 0.05],
+                "Lag: PIB -> Elec": [corr_lag_pe], "p_3>0.05": [pvalue_lag_pe > 0.05],
+                "correlacion": method
+            }, index=[reg])
+            df_corre = pd.concat([df_corre, row])
+        except Exception:
+            pass
+            
+    return df_corre
 
 class modelo_SARIMA:
     """

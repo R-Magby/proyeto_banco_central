@@ -138,3 +138,53 @@ def datos_regionales(df_servicios_per_region, file_credenciales="user.txt"):
     df_final.rename(columns={'indexDateString': 'Date'}, inplace=True)
 
     return df_final
+
+
+    return df_final
+
+
+def datos_regionales_quartely(df_per_region, tipo, file_credenciales="user.txt"):
+    """
+    Descarga los datos de cada serie trimestral desde la API REST del Banco Central.
+    Filtra por id_tipo y setea un tiempo hasta julio de 2027.
+    """
+    user, password = _leer_credenciales(file_credenciales)
+    dfs_serv_reg = []
+    
+    df_temp = df_per_region[df_per_region["id_tipo"] == tipo]
+    df_temp = df_temp.reset_index()
+    url = "https://si3.bcentral.cl/SieteRestWS/SieteRestWS.ashx"
+    
+    if "Tipo" in df_per_region.columns and len(df_per_region[df_per_region["id_tipo"] == tipo]["Tipo"].unique()) > 0:
+        tipo_selecionado = df_per_region[df_per_region["id_tipo"] == tipo]["Tipo"].unique()[0]
+        print(f"El tipo de PIB que se eligio fue {tipo_selecionado}")
+    
+    for idx, serie in enumerate(df_temp.seriesId.values):
+        params = {
+            "user": user,
+            "pass": password,
+            "function": "GetSeries",
+            "timeseries": serie,
+            "firstdate": "2000-01-01",
+            "lastdate": "2027-07-01"
+        }
+        response = requests.get(url, params=params).json()
+
+        try:
+            df = pd.DataFrame(response["Series"]["Obs"])
+            df["Titulo"] = df_temp["Titulo"][idx]
+            df['Región'] = df_temp["Región"][idx]
+            dfs_serv_reg.append(df)
+        except Exception as e:
+            print(f"Error en serie {serie}: {e}")
+            
+    if len(dfs_serv_reg) == 0:
+        return pd.DataFrame()
+        
+    df_final = pd.concat(dfs_serv_reg)
+    df_final["Región"] = df_final['Región'].str.strip()
+    df_final["Región"] = df_final['Región'].str.capitalize()
+    df_final["value"] = df_final["value"].astype(float)
+    df_final['indexDateString'] = pd.to_datetime(df_final['indexDateString'])
+    df_final.rename(columns={'indexDateString': 'Date'}, inplace=True)
+    return df_final

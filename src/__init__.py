@@ -14,8 +14,10 @@ Nota: Algunos módulos requieren bcchapi y statsmodels.
 # Importaciones que no dependen de paquetes externos pesados
 from src.cleaning import (
     ajuste_df_serie,
+    ajuste_df_serie_quartely,
     limpiar_datos_pib,
     limpiar_datos_electricidad,
+    normalize_quarter_dates,
 )
 
 from src.analysis import (
@@ -27,6 +29,8 @@ from src.analysis import (
     comparativa_tendencia,
     modelo_ARIMA,
     modelo_SARIMA,
+    test_normalidad_shapiro,
+    analisis_correlacion_pib_electricidad_trimestral,
 )
 
 # Importaciones que requieren bcchapi (pueden fallar si no está instalado)
@@ -35,7 +39,9 @@ try:
         conectar_api,
         buscar_series,
         datos_regionales,
+        datos_regionales_quartely,
         LISTA_SERVICIOS_ANUALES,
+        LISTA_SERVICIOS_QUAR,
         LISTA_ELECTRICIDAD,
         LISTA_DATASET,
     )
