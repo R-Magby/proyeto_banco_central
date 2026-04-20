@@ -2,9 +2,6 @@
 
 Este archivo sirve como un registro detallado y pedagógico de todos los pasos realizados en la construcción y orquestación de este proyecto de análisis de datos.
 
-## Introducción
-El objetivo es transformar un código "versión 1" en un proyecto profesional, modular y organizado, siguiendo las mejores prácticas de ingeniería de software aplicadas a la ciencia de datos.
-
 ---
 
 ## Registro de Actividades
