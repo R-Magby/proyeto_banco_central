@@ -19,7 +19,7 @@ El objetivo es transformar un código "versión 1" en un proyecto profesional, m
 - Se crearon los archivos de orquestación y configuración: `main.py`, `requirements.txt` y `README.md`.
 - Se generó una estructura base en `main.py` para demostrar el concepto de orquestación.
 
-**Justificación Pedagógica:**
+**Justificación:**
 - **`data/`**: Separa los datos brutos de los resultados procesados, asegurando la reproducibilidad.
 - **`notebooks/`**: Espacio para experimentación rápida (EDA) sin ensuciar el código productivo.
 - **`src/`**: Centraliza la lógica de negocio en módulos reutilizables.
@@ -41,6 +41,3 @@ El objetivo es transformar un código "versión 1" en un proyecto profesional, m
 - **Refinamiento Estadístico**: Se actualizó `Analisis_PIB` para usar CAGR y se añadió soporte para correlación Pearson/Spearman dinámica.
 - **Orquestación**: `main.py` ahora maneja los tres datasets principales (`df_anual`, `df_quartely`, `df_porc`).
 - **Documentación**: Se actualizó exhaustivamente `Resumen/ReadMe.md` con los hallazgos de la v2.
-
-**Justificación:**
-La transición a un análisis trimestral permite capturar la volatilidad económica intra-anual, ofreciendo una visión más fiel de la recuperación post-pandemia.
