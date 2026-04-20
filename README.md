@@ -29,7 +29,7 @@ Si tienes Docker instalado, no necesitas instalar librerías localmente:
 Este método asegura que el entorno de ejecución sea idéntico al desarrollo.
 
 ## Hallazgos Principales
-- Identificacion de regioens alcista y bajistas en cuanto a contribucion al PIB nacional.
+- Identificacion de regiones alcista y bajistas en cuanto a contribucion al PIB nacional.
 - Prediccion de la actividad economica dominante en el futuro en algunas regiones (Los lagos: servicios personales -> 3 años aprox -> manufacturero) 
 - Estudio del impacto del COVID en el PIB.
 - Serie de tiempo con ARIMA y SARIMA, este ultimo con un error del 9%
