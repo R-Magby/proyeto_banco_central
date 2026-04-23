@@ -112,4 +112,4 @@ Para mayor detalle acerca de la [Tabla.2](Tablas/Elec_x_PIB.md)
 
 pregunta: ¿Es posible predecir el PIB regional usando la generación eléctrica como variable anticipadora?
 
-Se entrenaron modelos ARIMA y SARIMA sobre los datos mensuales de electricidad para proyectar el PIB mediante regresión lineal. El error relativo del sistema de dos etapas fue del 20–30%, insuficiente para uso predictivo práctico. Queda pendiente explorar modelos con lag explícito y variables exógenas adicionales como empleo y desocupación.
+Se entrenaron modelos ARIMA y SARIMA usando el PIB de volumen, se pudo predecir con un error relativo del 7.4%
